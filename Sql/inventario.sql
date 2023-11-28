@@ -246,3 +246,6 @@ insert into detalle_pedido(cabecera_pedido,producto,cantidad_solicitada,subtotal
 values(2,1,10,3.73,10);
 
 select*from detalle_pedido;
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+select indentificador, tipo_documento,nombre,telefono,correo,direccion from proveedores 
+where upper(nombre) like '%SA%'
