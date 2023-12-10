@@ -25,12 +25,13 @@ public class VentasBDD {
 		PreparedStatement psStock = null;
 		ResultSet rsClave = null;
 		int codigoCabecera = 0;
+
 		Date fechaActual = new Date(); // FECHA DEL SISTEMA DEL JAVA UTIL
 		Timestamp fechaHoraActual = new Timestamp(fechaActual.getTime());
 		// TABLA CABECERA TABLA
 		try {
 			con = ConexionBDD.ObtenerConexion();
-			ps = con.prepareStatement("insert into cabecera_ventas(fecha,total_sin_iva,iva,total) values(?,?,?,?,?)",
+			ps = con.prepareStatement("insert into cabecera_ventas(fecha,total_sin_iva,iva,total) values(?,?,?,?)",
 					Statement.RETURN_GENERATED_KEYS); // DESPUES INSERT QUE ME RETORNE LAS CLAVES GENERADAS
 			BigDecimal cantidad = new BigDecimal(0);
 			ps.setTimestamp(1, fechaHoraActual);
@@ -44,14 +45,15 @@ public class VentasBDD {
 				codigoCabecera = rsClave.getInt(1);
 			}
 
-			// INSERTAR UNO POR UNO LOS DETALLES VENTAS, ACTUALIZAR E INSERTAR HISTORIAL DE STOCK
-			//INSERTAR DETALLES DE VENTAS
+			// INSERTAR UNO POR UNO LOS DETALLES VENTAS, ACTUALIZAR E INSERTAR HISTORIAL DE
+			// STOCK
+			// INSERTAR DETALLES DE VENTAS
 			ArrayList<DetalleVentas> detallesVentas = venta.getDetalles(); // RECUPERAR LOS DETALLLES DEL PEDIDO
 			DetalleVentas det;
 			for (int i = 0; i < detallesVentas.size(); i++) {
 				det = detallesVentas.get(i);
 				psDet = con.prepareStatement(
-						"insert into detalle_ventas(cabecera_ventas,producto,precio,cantidad,subtotal,subtotal_iva) values(?,?,?,?,?,?)");
+						"insert into detalle_ventas(cabecera_ventas,producto,precio_venta,cantidad,subtotal,subtotal_iva) values(?,?,?,?,?,?)");
 				psDet.setInt(1, codigoCabecera);
 				psDet.setInt(2, det.getProducto().getCodigo());
 				psDet.setInt(3, det.getCantidad());
@@ -65,22 +67,30 @@ public class VentasBDD {
 				psDet.setBigDecimal(5, subtotal);
 				if (IVABoolean) {
 					psDet.setBigDecimal(6, iva);
+
 				} else {
-					psDet.setBigDecimal(6, iva);
+					psDet.setBigDecimal(6, subtotal);
 				}
 				psDet.executeUpdate();
-				//ACTUALIZAR DETALLE DE VENTA
-				
-				//HISOTIAL DE STOCK CON VENTA
-				psStock = con.prepareStatement(
-						"insert into historial_stock(fecha,referencia,producto,cantidad) values(?,?,?,?)");
+				// ACTUALIZAR DETALLE DE VENTA
+				ps = con.prepareStatement(
+						"update cabecera_ventas set total_sin_iva = ?, iva=?, total=? where codigo_cv=?");
+				BigDecimal sumarIva = iva.add(iva);
+				BigDecimal sumarNoIva = subtotal.add(subtotal);
+				BigDecimal total = sumarIva.add(sumarNoIva);
+				ps.setBigDecimal(1, sumarNoIva);
+				ps.setBigDecimal(2, sumarIva);
+				ps.setBigDecimal(3, total);
+				ps.setInt(4, codigoCabecera);
+				ps.executeUpdate();
+				// HISOTIAL DE STOCK CON VENTA
+				psStock = con.prepareStatement( "insert into historial_stock(fecha,referencia,producto,cantidad) values(?,?,?,?)");
 				psStock.setTimestamp(1, fechaHoraActual);
-				psStock.setString(2, "VENTA " + venta.getCodigo());
+				psStock.setString(2, "VENTA " + codigoCabecera);
 				psStock.setInt(3, det.getProducto().getCodigo());
-				psStock.setInt(4, det.getCantidad());
+				psStock.setInt(4, (-1)*det.getCantidad());
 				psStock.executeUpdate();
 			}
-
 		} catch (SQLException e) { // OTRA EXCEPTION SERIA UN NUEVO MENSAJE CAPTURA Y LO RELANZA
 			e.printStackTrace();
 			throw new krakeDevException("ERROR AL INSERTAR AL PEDIDO. DETALLE:" + e.getMessage());

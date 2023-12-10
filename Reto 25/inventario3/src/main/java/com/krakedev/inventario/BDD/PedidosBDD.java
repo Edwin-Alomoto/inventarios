@@ -97,6 +97,7 @@ public class PedidosBDD {
 				psDet.setInt(2, det.getCantidadRecibida());
 				psDet.setInt(3, det.getCodigo());
 				psDet.executeUpdate();
+				
 				psStock=con.prepareStatement("insert into historial_stock(fecha,referencia,producto,cantidad) values(?,?,?,?)");
 				psStock.setTimestamp(1, fechaHoraActual);
 				psStock.setString(2, "PEDIDO "+pedido.getNumero());
