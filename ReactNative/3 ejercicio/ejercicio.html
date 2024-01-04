@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="ejercicio.js"></script>
+  </head>
+
+  <body>
+    <input type="text" id="txtValor" />
+
+    <input
+      type="button"
+      value="TEST1"
+      onclick="ejecutarCadena((texto)=> {
+      console.log('Hola '+texto)});"
+    />
+    <input
+      type="button"
+      value="TEST2"
+      onclick="ejecutarCadena((texto)=> {
+        let convertir = texto.toUpperCase();
+         console.log(convertir)});"
+    />
+    <input
+      type="button"
+      value="TEST3"
+      onclick="ejecutarCadena((text) => {
+      let contar = text.length;
+      console.log(contar)});"
+    />
+  </body>
+</html>
